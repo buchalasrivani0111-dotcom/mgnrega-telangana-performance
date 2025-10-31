@@ -1,0 +1,7 @@
+PG_HOST=db
+PG_USER=postgres
+PG_PASSWORD=postgres
+PG_DATABASE=mgnrega
+PG_PORT=5432
+DATA_API=https://api.data.gov.in/resource/<your_mgnrega_api_id>?api-key=<your_api_key>&format=json
+STATE=Telangana
