@@ -1,0 +1,53 @@
+import axios from "axios";
+import pkg from "pg";
+import dotenv from "dotenv";
+dotenv.config();
+
+const { Pool } = pkg;
+const pool = new Pool({
+  host: process.env.PG_HOST,
+  user: process.env.PG_USER,
+  password: process.env.PG_PASSWORD,
+  database: process.env.PG_DATABASE,
+  port: process.env.PG_PORT,
+});
+
+export async function fetchAndStoreData() {
+  try {
+    const response = await axios.get(process.env.DATA_API);
+    const records = response.data.records;
+    console.log(`Fetched ${records.length} records`);
+
+    for (const r of records) {
+      const district = r.district_name || r.district;
+      const res = await pool.query(
+        `INSERT INTO districts (name, state)
+         VALUES ($1, $2)
+         ON CONFLICT (name) DO NOTHING RETURNING id;`,
+        [district, process.env.STATE]
+      );
+
+      const districtResult = await pool.query(
+        `SELECT id FROM districts WHERE name = $1`,
+        [district]
+      );
+      const districtId = districtResult.rows[0].id;
+
+      await pool.query(
+        `INSERT INTO mgnrega_data (district_id, year, month, total_workers, person_days, expenditure)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          districtId,
+          new Date().getFullYear(),
+          new Date().getMonth() + 1,
+          r.total_workers || 0,
+          r.person_days || 0,
+          r.expenditure || 0,
+        ]
+      );
+    }
+    console.log("Data stored successfully");
+  } catch (err) {
+    console.error("Error fetching data:", err.message);
+  }
+}
