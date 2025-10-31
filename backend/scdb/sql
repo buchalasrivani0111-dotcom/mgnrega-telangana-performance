@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS districts (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  state TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS mgnrega_data (
+  id SERIAL PRIMARY KEY,
+  district_id INT REFERENCES districts(id),
+  year INT,
+  month INT,
+  total_workers BIGINT,
+  person_days BIGINT,
+  expenditure NUMERIC,
+  created_at TIMESTAMP DEFAULT NOW()
+);
